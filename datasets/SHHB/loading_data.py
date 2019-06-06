@@ -2,8 +2,9 @@ import torchvision.transforms as standard_transforms
 from torch.utils.data import DataLoader
 # from misc.data import DataLoader
 import misc.transforms as own_transforms
-from SHHB import SHHB
-from setting import cfg_data 
+from .SHHB import SHHB
+from .setting import cfg_data
+
 import torch
 
 
