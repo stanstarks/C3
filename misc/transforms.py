@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image, ImageOps, ImageFilter
 from config import cfg
 import torch
+from torchvision.transforms.functional import adjust_gamma
 # ===============================img tranforms============================
 
 class Compose(object):
@@ -19,6 +20,20 @@ class Compose(object):
             img, mask, bbx = t(img, mask, bbx)
         return img, mask, bbx
 
+
+class AdjustGamma(object):
+    def __init__(self, prob, gamma_range):
+        self.prob = prob
+        self.gamma_range = gamma_range
+
+    def __call__(self, img, mask):
+        if random.random() < self.prob:
+            # pick gamma
+            gamma = random.uniform(*self.gamma_range)
+            img = adjust_gamma(img, gamma)
+        return img, mask
+
+
 class RandomHorizontallyFlip(object):
     def __call__(self, img, mask, bbx=None):
         if random.random() < 0.5:
@@ -33,6 +48,7 @@ class RandomHorizontallyFlip(object):
         if bbx is None:
             return img, mask
         return img, mask, bbx
+
 
 class RandomCrop(object):
     def __init__(self, size, padding=0):

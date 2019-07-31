@@ -2,7 +2,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from .mobilenetv2 import mobilenetv2
-from .decoders import DLv3plus
+from .decoders.dlv3plus import DLv3plus
 
 
 class Mnv2Dlv3p(nn.Module):

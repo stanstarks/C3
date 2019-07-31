@@ -1,4 +1,3 @@
-import numpy as np
 import torch.nn as nn
 
 from .inventory import model_urls

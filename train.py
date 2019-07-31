@@ -44,7 +44,7 @@ elif data_mode is 'GCC':
 net = cfg.NET
 if net in ['MCNN', 'AlexNet', 'VGG', 'VGG_DECODER',
            'Res50', 'Res101', 'CSRNet','Res101_SFCN',
-           'mnv2_dlv3p']:
+           'mnv2_dlv3p', 'VGG_DSNet']:
     from trainer import Trainer
 elif net in ['SANet']: 
     from trainer_for_M2TCC import Trainer # double losses but signle output
@@ -55,5 +55,5 @@ elif net in ['PCCNet']:
 
 #------------Start Training------------
 pwd = os.path.split(os.path.realpath(__file__))[0]
-cc_trainer = Trainer(loading_data,cfg_data,pwd)
+cc_trainer = Trainer(loading_data, cfg_data, pwd)
 cc_trainer.forward()

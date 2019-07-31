@@ -69,6 +69,7 @@ def convbnrelu(
         kernel_size,
         stride=1,
         groups=1,
+        dilation=1,
         act=nn.ReLU(inplace=False)):
     """2D convolution => BatchNorm => activation sequence.
 
@@ -90,8 +91,9 @@ def convbnrelu(
         out_planes,
         kernel_size,
         stride=stride,
-        padding=int(kernel_size / 2.),
+        padding=(kernel_size // 2) * dilation,
         groups=groups,
+        dilation=dilation,
         bias=False))
     modules.append(batchnorm(out_planes))
     if act is not None:

@@ -23,16 +23,11 @@ class Trainer():
         self.pwd = pwd
 
         self.net_name = cfg.NET
-        self.net = CrowdCounter(cfg.GPU_ID,self.net_name).cuda()
+        self.net = CrowdCounter(cfg.GPU_ID, self.net_name).cuda()
         self.optimizer = optim.Adam(self.net.CCN.parameters(), lr=cfg.LR, weight_decay=1e-4)
         # self.optimizer = optim.SGD(self.net.parameters(), cfg.LR, momentum=0.95,weight_decay=5e-4)
-        self.scheduler = WarmupMultiStepLR(
-            self.optimizer,
-            milestones=(70,),
-            gamma=cfg.LR_DECAY,
-            warmup_factor=1/3,
-            warmup_iters=10,
-            warmup_method='linear')
+        self.scheduler = StepLR(
+            self.optimizer, step_size=cfg.NUM_EPOCH_LR_DECAY, gamma=cfg.LR_DECAY)
 
         self.train_record = {'best_mae': 1e20, 'best_mse':1e20, 'best_model_name': ''}
         self.timer = {'iter time' : Timer(),'train time' : Timer(),'val time' : Timer()} 
@@ -97,8 +92,8 @@ class Trainer():
             gt_map = gt_map.cuda()
 
             self.optimizer.zero_grad()
-            pred_map = self.net(img, gt_map)
-            loss = self.net.loss
+            pred_map, losses = self.net(img, gt_map)
+            loss = losses["total_loss"]
             loss.backward()
             self.optimizer.step()
 
@@ -106,8 +101,11 @@ class Trainer():
                 self.i_tb += 1
                 self.writer.add_scalar('train_loss', loss.item(), self.i_tb)
                 self.timer['iter time'].toc(average=False)
-                print('[ep %d][it %d][loss %.4f][lr %.4f][%.2fs]' % \
-                        (self.epoch + 1, i + 1, loss.item(), self.optimizer.param_groups[0]['lr']*10000, self.timer['iter time'].diff))
+                print('[ep %d][it %d][mse_loss %.4f][cns_loss %.4f][lr %.4f][%.2fs]' % \
+                        (self.epoch + 1, i + 1,
+                         losses['mse'].item(),
+                         losses['cns'].item(),
+                         self.optimizer.param_groups[0]['lr']*10000, self.timer['iter time'].diff))
                 print('        [cnt: gt: %.1f pred: %.2f]' % (gt_map[0].sum().data/self.cfg_data.LOG_PARA, pred_map[0].sum().data/self.cfg_data.LOG_PARA))
 
 
@@ -126,18 +124,18 @@ class Trainer():
                 img = img.cuda()
                 gt_map = gt_map.cuda()
 
-                pred_map = self.net.forward(img,gt_map)
+                pred_map, loss_dict = self.net.forward(img,gt_map)
+                loss = loss_dict['total_loss']
 
                 pred_map = pred_map.data.cpu().numpy()
                 gt_map = gt_map.data.cpu().numpy()
 
+                losses.update(loss.item())
+
                 for i_img in range(pred_map.shape[0]):
-                
                     pred_cnt = np.sum(pred_map[i_img])/self.cfg_data.LOG_PARA
                     gt_count = np.sum(gt_map[i_img])/self.cfg_data.LOG_PARA
 
-                    
-                    losses.update(self.net.loss.item())
                     maes.update(abs(gt_count-pred_cnt))
                     mses.update((gt_count-pred_cnt)*(gt_count-pred_cnt))
                 if vi==0:

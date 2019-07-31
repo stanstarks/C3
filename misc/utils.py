@@ -251,8 +251,6 @@ def copy_cur_env(work_dir, dst_dir, exception):
             shutil.copyfile(file,dst_file)
 
 
-
-
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
@@ -274,7 +272,7 @@ class AverageMeter(object):
 class AverageCategoryMeter(object):
     """Computes and stores the average and current value"""
 
-    def __init__(self,num_class):        
+    def __init__(self,num_class):
         self.num_class = num_class
         self.reset()
 
